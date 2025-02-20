@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Header from './components/Header/Header';
 import ModelViewer from './components/ModelViewer/ModelViewer';
 import MaterialSelector from './components/MaterialSelector/MaterialSelector';
@@ -8,7 +8,7 @@ import {
   PriceBreakdown,
   ModelMetrics,
 } from './utils/priceCalculator';
-import { MATERIAL } from './utils/priceConstants';
+import { analyzeSTLFile } from './utils/modelAnalyzer';
 import QuoteForm from './components/QuoteForm/QuoteForm';
 
 function App() {
@@ -18,69 +18,57 @@ function App() {
     surfaceArea: 0,
     boundingBox: { x: 0, y: 0, z: 0 }
   });
-  const [quoteData, setQuoteData] = useState<PriceBreakdown>({
-    materialCost: 0,
-    machineCost: 0,
-    laborCost: 0,
-    powerCost: 0,
-    postProcessingCost: 0,
-    total: 0,
-    printTime: 0,
-    breakdown: {
-      materialDetails: {
-        volume: 0,
-        costPerCm3: 0,
-        reusageRate: 0,
-        effectivePackingDensity: 0
-      },
-      timeDetails: {
-        printTime: 0,
-        setupTime: 0,
-        postProcessingTime: 0
-      }
-    }
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const [quoteData, setQuoteData] = useState<PriceBreakdown | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileUpload = (file: File) => {
-    setIsLoading(true);
-    setError(null);
-    setModelFile(file);
-  };
+  const handleFileUpload = useCallback(async (file: File) => {
+    try {
+      setModelFile(file);
+      setError(null);
 
-  const calculateQuote = (metrics: ModelMetrics) => {
-    if (!metrics) return;
+      // Analyze the STL file
+      const metrics = await analyzeSTLFile(file);
+      setModelMetrics(metrics);
 
-    const calculator = new PriceCalculator(metrics.volume, 'BASIC');
-    const quoteData = calculator.calculateTotalPrice();
-    setQuoteData(quoteData);
-  };
+      // Calculate price
+      const calculator = new PriceCalculator(metrics.volume);
+      const priceData = calculator.calculateTotalPrice();
+      setQuoteData(priceData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process file');
+      console.error('Error processing file:', err);
+    }
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-100">
       <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <QuoteForm onFileUpload={handleFileUpload} />
+            {error && (
+              <div className="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                {error}
+              </div>
+            )}
+            <div className="card p-4">
               {modelFile && (
                 <ModelViewer 
                   file={modelFile}
                   onMetricsCalculated={setModelMetrics}
                 />
               )}
-              <QuoteForm 
-                onFileUpload={handleFileUpload}
-              />
             </div>
           </div>
-          <div>
+          <div className="space-y-6">
             <MaterialSelector />
-            <QuoteSummary
-              metrics={modelMetrics}
-              quoteData={quoteData}
-            />
+            {quoteData && (
+              <QuoteSummary
+                metrics={modelMetrics}
+                quoteData={quoteData}
+              />
+            )}
           </div>
         </div>
       </main>

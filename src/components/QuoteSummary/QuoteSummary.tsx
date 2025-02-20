@@ -1,6 +1,8 @@
 import React from 'react';
 import { ModelMetrics, PriceBreakdown } from '../../utils/priceCalculator';
 import { OPERATING_COSTS, MATERIAL } from '../../utils/priceConstants';
+import { POST_PROCESSING_OPTIONS } from '../../utils/priceConstants';
+import { ProcessingParameters } from '../../utils/types';
 
 interface QuoteSummaryProps {
   metrics: ModelMetrics;
@@ -11,6 +13,27 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({ metrics, quoteData }) => {
   if (!quoteData) return null;
 
   const { materialCost, machineCost, laborCost, powerCost, postProcessingCost, total, printTime } = quoteData;
+
+  const detailedBreakdown = (
+    <div className="mt-4 space-y-2 text-sm">
+      <h4 className="font-semibold">Detailed Cost Breakdown</h4>
+      <div className="grid grid-cols-2 gap-2">
+        <span>Material Cost:</span>
+        <span>${quoteData.materialCost.toFixed(2)}</span>
+        <span>Machine Cost:</span>
+        <span>${quoteData.machineCost.toFixed(2)}</span>
+        <span>Labor Cost:</span>
+        <span>${quoteData.laborCost.toFixed(2)}</span>
+        <span>Quality Control:</span>
+        <span>${quoteData.qcCost.toFixed(2)}</span>
+        <span>Overhead:</span>
+        <span>${quoteData.overhead.toFixed(2)}</span>
+        <span>Processing Time:</span>
+        <span>{Object.values(quoteData.processingTimes as ProcessingParameters)
+          .reduce((a: number, b: number) => a + b, 0).toFixed(2)} hours</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -63,8 +86,10 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({ metrics, quoteData }) => {
         <div className="text-sm text-gray-600">
           <p>* Prices include material reuse rate of {(MATERIAL.reusageRate * 100).toFixed(0)}%</p>
           <p>* Setup time: {OPERATING_COSTS.setupTimeBase} hours</p>
-          <p>* Post-processing time: {OPERATING_COSTS.postProcessingTimeBase} hours</p>
+          <p>* Post-processing time: {POST_PROCESSING_OPTIONS.BASIC.additionalTime} hours</p>
         </div>
+
+        {detailedBreakdown}
       </div>
     </div>
   );

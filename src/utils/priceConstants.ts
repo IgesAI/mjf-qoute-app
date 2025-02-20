@@ -20,47 +20,51 @@ export const MATERIAL = {
 export const MACHINE_CONSTANTS = {
   HP_JET_FUSION_5200: {
     name: 'HP Jet Fusion 5200',
-    powerConsumption: 14.5, // kW
-    baseHourlyCost: 65.00, // Higher for MJF
+    powerConsumption: 12, // kW at peak
+    baseHourlyCost: 45.00,
     buildChamberSize: {
       x: 380, // mm
       y: 284, // mm
-      z: 380,  // mm
+      z: 380, // mm
     },
-    averagePackingDensity: 0.12, // 12% - typical for MJF
-    failureRate: 0.03, // 3% - MJF is quite reliable
+    averagePackingDensity: 0.12, // 12% typical packing density
+    failureRate: 0.02,
     timeDistribution: {
-      printing: 0.65,   // 65% of time spent printing
-      cooling: 0.25,    // 25% cooling
-      maintenance: 0.10 // 10% maintenance
-    }
+      printing: 0.70,
+      cooling: 0.20,
+      maintenance: 0.10
+    },
+    minimumBatchSize: 8 // Minimum number of parts for optimal efficiency
   }
 } as const;
 
 // Operating Costs
 export const OPERATING_COSTS = {
-  laborRate: 28.00, // USD per hour
-  energyCost: 0.12, // USD per kWh
-  setupTimeBase: 1.5, // hours
-  postProcessingTimeBase: 0.5, // hours
-  failureCostMultiplier: 1.1 // 10% additional cost for failures
+  laborRate: {
+    setup: 25.00,    // Setup requires more skilled labor
+    processing: 20.00, // Basic processing tasks
+    qc: 22.00        // Quality control
+  },
+  energyCost: 0.12,
+  setupTimeBase: 0.2, // 12 minutes per build, shared
+  failureCostMultiplier: 1.05
 } as const;
 
 // Post-Processing Options
 export const POST_PROCESSING_OPTIONS = {
   BASIC: {
     name: 'Basic Cleaning',
-    cost: 35.00, // Higher for MJF due to powder removal
-    additionalTime: 0.75,
+    cost: 5.00,      // Base cost for standard finish
+    additionalTime: 0.08, // 5 minutes per part
   },
   MEDIUM: {
     name: 'Bead Blasting',
-    cost: 65.00,
-    additionalTime: 1.25,
+    cost: 15.00,     // Enhanced surface finish
+    additionalTime: 0.17, // 10 minutes per part
   },
   ADVANCED: {
     name: 'Dyeing and Finishing',
-    cost: 120.00,
-    additionalTime: 2.5,
+    cost: 35.00,     // Full post-processing
+    additionalTime: 0.33, // 20 minutes per part
   }
 } as const;
